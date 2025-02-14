@@ -15,8 +15,8 @@ export default function Login() {
       await signInWithEmailAndPassword(auth, email, password);
       alert("登录成功！");
       router.push("/dashboard"); // 登录后跳转到主页
-    } catch (error:any) {
-      alert(error.message);
+    } catch (error:unknown) {
+      alert("登入錯誤");
     }
   };
 
