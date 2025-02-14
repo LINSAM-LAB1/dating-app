@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { db } from "../firebase";
 import {
@@ -19,7 +19,7 @@ interface Message {
   timestamp: string;
 }
 
-export default function Chat() {
+const Chat = () => {
   const searchParams = useSearchParams();
   const userId = searchParams.get("userId"); // 当前用户
   const matchedUserId = searchParams.get("matchedUserId"); // 对方用户
@@ -118,4 +118,13 @@ export default function Chat() {
       </div>
     </div>
   );
-}
+};
+
+// 使用 Suspense 边界包裹 Chat 组件
+const ChatWithSuspense = () => (
+  <Suspense fallback={<div>加载中...</div>}>
+    <Chat />
+  </Suspense>
+);
+
+export default ChatWithSuspense;
