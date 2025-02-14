@@ -32,7 +32,7 @@ export default function Profile() {
       }
     });
     return () => unsubscribe();
-  }, []);
+  }, [router]);
 
   // 加载当前用户资料
   const loadProfile = async (email: string) => {

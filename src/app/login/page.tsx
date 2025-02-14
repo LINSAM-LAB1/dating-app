@@ -17,6 +17,7 @@ export default function Login() {
       router.push("/dashboard"); // 登录后跳转到主页
     } catch (error:unknown) {
       alert("登入錯誤");
+      console.log(error);
     }
   };
 
