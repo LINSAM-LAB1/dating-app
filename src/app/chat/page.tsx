@@ -16,7 +16,7 @@ interface Message {
   id: string;
   senderId: string;
   text: string;
-  timestamp: any;
+  timestamp: string;
 }
 
 export default function Chat() {
