@@ -29,9 +29,9 @@ export default function SignUp() {
 
       alert("注册成功！");
       router.push("/dashboard"); // ✅ 成功注册后跳转到 dashboard
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("注册失败：", error);
-      alert(error.message);
+      alert("注册失败");
     }
   };
 

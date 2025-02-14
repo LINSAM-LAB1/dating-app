@@ -5,6 +5,7 @@ import { getAuth, signOut, onAuthStateChanged, User } from "firebase/auth";
 import { doc, getDoc, updateDoc, setDoc, collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "../firebase";
 import { useRouter } from "next/navigation"; // 用來進行頁面跳轉
+import Image from 'next/image';
 
 interface Profile {
   name: string;
@@ -35,7 +36,7 @@ export default function Dashboard() {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [auth]);
 
   const checkViewedCount = async (userId: string) => {
     const userDocRef = doc(db, "users", userId);
