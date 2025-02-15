@@ -21,8 +21,8 @@ interface Message {
 
 const Chat = () => {
   const searchParams = useSearchParams();
-  const userId = searchParams.get("userId"); // 当前用户
-  const matchedUserId = searchParams.get("matchedUserId"); // 对方用户
+  const userId = searchParams?.get("userId") ?? ""; // 当前用户
+  const matchedUserId = searchParams?.get("matchedUserId") ?? ""; // 对方用户
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
