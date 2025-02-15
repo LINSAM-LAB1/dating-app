@@ -1,4 +1,17 @@
 import Image from "next/image";
+import Head from "next/head";
+import { AppProps } from "next/app";
+
+function MyApp({ Component, pageProps }: AppProps) {
+  return (
+    <>
+      <Head>
+        <meta name="google-site-verification" content="xxxxxxxxxxxxxxxxxxxx" />
+      </Head>
+      <Component {...pageProps} />
+    </>
+  );
+}
 
 export default function Home() {
   return (
