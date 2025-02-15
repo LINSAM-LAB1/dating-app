@@ -1,2 +1,3 @@
 User-agent: *
 Disallow:
+Sitemap: https://dating-app-git-main-sams-projects-d90b494b.vercel.app/sitemap.xml
