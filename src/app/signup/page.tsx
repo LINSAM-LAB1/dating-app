@@ -30,12 +30,12 @@ export default function SignUp() {
       alert("注册成功！");
       router.push("/dashboard"); // ✅ 成功注册后跳转到 dashboard
     } catch (error: unknown) {
-      console.error("注册失败：", error);
-      alert("注册失败");
+      console.error("注册失敗：", error);
+      alert("注册失敗");
     }
   };
 
-  // Google 登录处理
+  // Google 登入处理
   const handleGoogleSignIn = async () => {
     try {
       const result = await signInWithPopup(auth, googleAuthProvider);
@@ -49,18 +49,18 @@ export default function SignUp() {
         age: 0, // 你可以选择在此处将年龄设为默认值
       });
 
-      alert("Google 登录成功！");
-      router.push("/dashboard"); // ✅ 成功登录后跳转到 dashboard
+      alert("Google 登入成功！");
+      router.push("/dashboard"); // ✅ 成功登入后跳转到 dashboard
     } catch (error) {
-      console.error("Google 登录失败：", error);
-      alert("Google 登录失败");
+      console.error("Google 登入失敗：", error);
+      alert("Google 登入失敗");
     }
   };
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-100 p-8">
       <div className="bg-white rounded-lg shadow-lg p-8 w-full max-w-md">
-        <h1 className="text-3xl font-bold text-center mb-6">注册</h1>
+        <h1 className="text-3xl font-bold text-center mb-6">註冊</h1>
         
         {/* 姓名输入框 */}
         <input 
@@ -107,19 +107,19 @@ export default function SignUp() {
           onClick={handleSignUp}
           className="w-full p-3 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-300 mb-4"
         >
-          注册
+          註冊
         </button>
 
-        {/* Google 登录按钮 */}
+        {/* Google 登入按钮 */}
         <button 
           onClick={handleGoogleSignIn}
-          className="w-full p-3 bg-red-500 text-white rounded-md hover:bg-red-600 transition duration-300 mb-4"
+          className="w-full p-3 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition duration-300 mb-4"
         >
-          使用 Google 登录
+          使用 Google 登入
         </button>
 
         <div className="text-center">
-          <p>已有账户？<a href="/login" className="text-blue-500">登录</a></p>
+          <p>已有帳號？<a href="/login" className="text-blue-500">登入</a></p>
         </div>
       </div>
     </div>

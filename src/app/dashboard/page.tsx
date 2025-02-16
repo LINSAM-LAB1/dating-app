@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+
+import { useState, useEffect, useRef } from "react";
 import { getAuth, signOut, onAuthStateChanged, User } from "firebase/auth";
 import { doc, getDoc, updateDoc, setDoc, collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "../firebase";
@@ -22,6 +23,8 @@ export default function Dashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(true); // 控制左侧列表显示
   const auth = getAuth();
   const router = useRouter(); // 用来跳转到聊天页面
+  const [settingsOpen, setSettingsOpen] = useState(false); // 用于管理齿轮菜单的状态
+  const menuRef = useRef(null); // 用于检测点击空白区域
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -211,66 +214,97 @@ export default function Dashboard() {
     }
   };
 
-  return (
-    <div className="flex h-screen">
-      {/* 左侧列表区域 */}
-      <div className={`transition-all duration-300 bg-gray-800 text-white ${sidebarOpen ? "w-64" : "w-20"} p-4 flex flex-col justify-between`}>
-        <button
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="p-4 text-xl w-full text-center bg-gray-700 hover:bg-gray-600 rounded"
-        >
-          {sidebarOpen ? "收起" : "展开"}
+// 新增的处理齿轮菜单点击的函数
+const handleSettingsClick = () => {
+  setSettingsOpen(!settingsOpen);  // 切换齿轮菜单的状态
+};
+
+return (
+  <div className="flex h-screen">
+    {/* 左侧列表区域 */}
+    <div className={`transition-all duration-300 bg-gray-800 text-white ${sidebarOpen ? "w-64" : "w-20"} p-4 flex flex-col justify-between`}>
+      
+      {/* 展开/收起按钮 - 替换为箭头图标 */}
+      <button
+        onClick={() => setSidebarOpen(!sidebarOpen)}
+        className="p-4 text-xl w-full text-center bg-gray-700 hover:bg-gray-600 rounded">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={sidebarOpen ? "M19 9l-7 7-7-7" : "M5 15l7-7 7 7"} />
+        </svg>
+        <p className="text-white text-sm">配對成功的用戶</p>
+      </button>
+
+      {/* 设置按钮（右上角） */}
+      <div className="absolute top-4 right-4">
+        <button onClick={handleSettingsClick} className="text-gray-800 text-3xl">
+          {/* 使用汉堡菜单图标 */}
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
         </button>
-        
-        {/* 显示配对成功的用户区域 */}
-        {sidebarOpen && matchedUsers.length > 0 && (
-          <div className="flex flex-col items-start mt-4 overflow-y-auto max-h-64">
-            {matchedUsers.map((matchedUser) => (
-              <div key={matchedUser.email} className="flex flex-col items-center p-2 bg-gray-700 rounded-lg w-full mb-2">
-                <p className="text-white text-sm">你和 {matchedUser.name} 配对成功！</p>
-                <button
-                  onClick={() => router.push(`/chat?userId=${user?.email}&matchedUserId=${matchedUser.email}`)}
-                  className="mt-2 px-4 py-2 bg-blue-500 text-white rounded text-xs">
-                  去聊天
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
 
-      {/* 主要内容区域 */}
-      <div className="flex-1 flex flex-col items-center justify-center p-4">
-        {user ? (
-          <>
-            <h1 className="text-2xl font-bold text-gray-800">欢迎, {user.email}！</h1>
-            {viewedToday >= 3 ? (
-              <p className="text-red-500 mt-4">今天的推荐用完了，请明天再来！</p>
-            ) : profiles.length > 0 ? (
-              <div className="mt-4 flex flex-col items-center">
-                <h2 className="text-xl text-gray-700">{profiles[currentIndex].name}, {profiles[currentIndex].age} 岁</h2>
-                <img src={profiles[currentIndex].photo} alt={profiles[currentIndex].name} className="w-32 h-32 rounded-full mt-2" />
-                <div className="flex mt-4">
-                  <button onClick={handleLike} className="px-4 py-2 bg-green-500 text-white rounded-full mr-2 hover:bg-green-400 transition">
-                    喜欢
-                  </button>
-                  <button onClick={handleDislike} className="px-4 py-2 bg-red-500 text-white rounded-full hover:bg-red-400 transition">
-                    不喜欢
-                  </button>
-                </div>
-                <p className="mt-2 text-gray-600">今天剩余推荐次数: {3 - viewedToday}</p>
-              </div>
-            ) : (
-              <p className="mt-4 text-gray-600">加载中...</p>
-            )}
-            <button onClick={handleSignOut} className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-400 transition">
-              退出登录
-            </button>
-          </>
-        ) : (
-          <p className="text-gray-600">加载中...</p>
-        )}
-      </div>
+      {/* 设置菜单 */}
+      {settingsOpen && (
+        <div className="absolute top-12 right-4 bg-white text-gray-800 p-4 rounded-lg shadow-lg">
+          <ul>
+            <li className="py-2"><a href="/settings" className="hover:bg-gray-200">设置</a></li>
+            <li className="py-2"><a href="/profile" className="hover:bg-gray-200">个人资料</a></li>
+            <li className="py-2"><a href="/logout" className="hover:bg-gray-200">退出</a></li>
+          </ul>
+        </div>
+      )}
+
+      {/* 显示配对成功的用户区域 */}
+      {sidebarOpen && matchedUsers.length > 0 && (
+        <div className="flex flex-col items-start mt-4 overflow-y-auto max-h-auto">
+          {matchedUsers.map((matchedUser) => (
+            <div key={matchedUser.email} className="flex flex-col items-start p-2 bg-gray-700 rounded-lg w-full mb-2">
+              <p className="text-white text-sm">和 {matchedUser.name} </p>
+              <button
+                onClick={() => router.push(`/chat?userId=${user?.email}&matchedUserId=${matchedUser.email}`)}
+                className="mt-2 px-3 py-1 bg-blue-500 text-white rounded text-xs">
+                聊天
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
-  );
+
+    {/* 主要内容区域 */}
+    <div className="flex-1 flex flex-col items-center justify-center p-4">
+      {user ? (
+        <>
+          <h1 className="text-2xl font-bold text-gray-800">欢迎, {user.email}！</h1>
+          {viewedToday >= 3 ? (
+            <p className="text-red-500 mt-4">今天的推荐用完了，请明天再来！</p>
+          ) : profiles.length > 0 ? (
+            <div className="mt-4 flex flex-col items-center">
+              <h2 className="text-xl text-gray-700">{profiles[currentIndex].name}, {profiles[currentIndex].age} 岁</h2>
+              <img src={profiles[currentIndex].photo} alt={profiles[currentIndex].name} className="w-32 h-32 rounded-full mt-2" />
+              <div className="flex mt-4">
+                <button onClick={handleLike} className="px-4 py-2 bg-green-500 text-white rounded-full mr-2 hover:bg-green-400 transition">
+                  喜欢
+                </button>
+                <button onClick={handleDislike} className="px-4 py-2 bg-red-500 text-white rounded-full hover:bg-red-400 transition">
+                  不喜欢
+                </button>
+              </div>
+              <p className="mt-2 text-gray-600">今天剩余推荐次数: {3 - viewedToday}</p>
+            </div>
+          ) : (
+            <p className="mt-4 text-gray-600">加载中...</p>
+          )}
+          <button onClick={handleSignOut} className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-400 transition">
+            退出登录
+          </button>
+        </>
+      ) : (
+        <p className="text-gray-600">加载中...</p>
+      )}
+    </div>
+  </div>
+);
+
 }
