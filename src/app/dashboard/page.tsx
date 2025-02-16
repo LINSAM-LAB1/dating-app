@@ -18,7 +18,7 @@ export default function Dashboard() {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [viewedToday, setViewedToday] = useState<number>(0);
-  const [matchedUser, setMatchedUser] = useState<Profile | null>(null); // 配对用户
+  const [matchedUsers, setMatchedUsers] = useState<Profile[]>([]); // 配对用户列表
   const [sidebarOpen, setSidebarOpen] = useState(true); // 控制左侧列表显示
   const auth = getAuth();
   const router = useRouter(); // 用来跳转到聊天页面
@@ -32,25 +32,47 @@ export default function Dashboard() {
 
         // 查询 matches 集合，检查是否有配对记录
         const matchesRef = collection(db, "matches");
-        const matchQuery = query(
-          matchesRef, 
-          where("userId", "==", currentUser.email)
-        );
-        const matchSnapshot = await getDocs(matchQuery);
 
-        if (!matchSnapshot.empty) {
-          const matchedDoc = matchSnapshot.docs[0].data(); // 获取第一个配对记录
-          const matchedUserProfile: Profile = {
+        // 查询 userId 等于当前用户 email 的记录
+        const userQuery = query(matchesRef, where("userId", "==", currentUser.email));
+        const matchedQuery = query(matchesRef, where("matchedUserId", "==", currentUser.email));
+
+        // 获取两个查询结果
+        const userSnapshot = await getDocs(userQuery);
+        const matchedSnapshot = await getDocs(matchedQuery);
+
+        let matchedUsersList: Profile[] = [];
+
+        // 合并两个查询的结果
+        userSnapshot.docs.forEach((doc) => {
+          const matchedDoc = doc.data();
+          matchedUsersList.push({
             name: matchedDoc.matchedUserId, // 假设 matchedUserId 是配对用户的 email
-            age: 0, // 可以根据需要加载更多资料
+            age: 0, // 根据需要加载更多资料
             email: matchedDoc.matchedUserId,
-            photo: "" // 可以根据需要加载更多资料
-          };
-          setMatchedUser(matchedUserProfile); // 设置配对用户
-        }
-      } else {
-        setUser(null);
-        setProfiles([]);
+            photo: "" // 根据需要加载更多资料
+          });
+        });
+
+        matchedSnapshot.docs.forEach((doc) => {
+          const matchedDoc = doc.data();
+          matchedUsersList.push({
+            name: matchedDoc.userId, // 假设 userId 是配对用户的 email
+            age: 0, // 根据需要加载更多资料
+            email: matchedDoc.userId,
+            photo: "" // 根据需要加载更多资料
+          });
+        });
+
+        // 打印配对成功的用户信息
+        console.log("配对成功的用户列表：", matchedUsersList);
+
+        // 去除重复的用户（如果存在）
+        const uniqueMatchedUsers = Array.from(
+          new Map(matchedUsersList.map((user) => [user.email, user])).values()
+        );
+        
+        setMatchedUsers(uniqueMatchedUsers); // 设置多个配对用户
       }
     });
 
@@ -151,7 +173,7 @@ export default function Dashboard() {
 
       if (!reverseLikeSnapshot.empty) {
         alert("配对成功！");
-        setMatchedUser(likedUser); // 配对成功
+        setMatchedUsers((prev) => [...prev, likedUser]); // 添加配对成功的用户到列表
 
         // 在 "matches" 集合中记录配对信息
         const matchRef = doc(db, "matches", `${user.email}_${likedUser.email}`);
@@ -201,16 +223,18 @@ export default function Dashboard() {
         </button>
         
         {/* 顯示配對成功的用戶區域 */}
-        {sidebarOpen && matchedUser && (
+        {sidebarOpen && matchedUsers.length > 0 && (
           <div className="flex flex-col items-start mt-4 overflow-y-auto max-h-64">
-            <div className="flex flex-col items-center p-2 bg-gray-700 rounded-lg w-full">
-              <p className="text-white text-sm">你和 {matchedUser.name} 配对成功！</p>
-              <button
-                onClick={() => router.push(`/chat?userId=${user?.email}&matchedUserId=${matchedUser.email}`)}
-                className="mt-2 px-4 py-2 bg-blue-500 text-white rounded text-xs">
-                去聊天
-              </button>
-            </div>
+            {matchedUsers.map((matchedUser) => (
+              <div key={matchedUser.email} className="flex flex-col items-center p-2 bg-gray-700 rounded-lg w-full mb-2">
+                <p className="text-white text-sm">你和 {matchedUser.name} 配对成功！</p>
+                <button
+                  onClick={() => router.push(`/chat?userId=${user?.email}&matchedUserId=${matchedUser.email}`)}
+                  className="mt-2 px-4 py-2 bg-blue-500 text-white rounded text-xs">
+                  去聊天
+                </button>
+              </div>
+            ))}
           </div>
         )}
       </div>
@@ -237,14 +261,14 @@ export default function Dashboard() {
                 <p className="mt-2 text-gray-600">今天剩余推荐次数: {3 - viewedToday}</p>
               </div>
             ) : (
-              <p className="text-gray-500">加载推荐用户中...</p>
+              <p className="mt-4 text-gray-600">没有更多用户推荐了。</p>
             )}
-            <button onClick={handleSignOut} className="mt-4 px-4 py-2 bg-gray-500 text-white rounded-full">
-              退出
+            <button onClick={handleSignOut} className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-400 transition">
+              退出登录
             </button>
           </>
         ) : (
-          <p>请先登录</p>
+          <p className="text-gray-600">加载中...</p>
         )}
       </div>
     </div>
