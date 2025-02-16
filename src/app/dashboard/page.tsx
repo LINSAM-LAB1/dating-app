@@ -5,7 +5,6 @@ import { getAuth, signOut, onAuthStateChanged, User } from "firebase/auth";
 import { doc, getDoc, updateDoc, setDoc, collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "../firebase";
 import { useRouter } from "next/navigation"; 
-import Image from "next/image";
 
 
 interface Profile {
