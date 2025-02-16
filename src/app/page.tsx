@@ -1,4 +1,25 @@
+"use client"; // 标记此文件为客户端组件
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+import { auth } from "./firebase";
+
 export default function Home() {
+  const router = useRouter();
+
+  const handleGoogleSignIn = async () => {
+    const provider = new GoogleAuthProvider();
+    try {
+      const result = await signInWithPopup(auth, provider);
+      // 登录成功后跳转到 dashboard
+      router.push("/dashboard");
+    } catch (error) {
+      console.error("Google 登录失败：", error);
+      alert("Google 登录失败");
+    }
+  };
+
   return (
     <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
       <main className="flex flex-col gap-8 row-start-2 items-center sm:items-center">
@@ -20,6 +41,7 @@ export default function Home() {
         </ol>
 
         <div className="flex gap-4 items-center flex-col sm:flex-col justify-center">
+          {/* 登录按钮 */}
           <a
             className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-12 px-5 sm:px-12 w-full sm:w-auto"
             href="/login"
@@ -28,6 +50,7 @@ export default function Home() {
           >
             登入
           </a>
+          {/* 注册按钮 */}
           <a
             className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-12 px-5 sm:px-12 w-full sm:w-auto"
             href="/signup"
@@ -36,6 +59,14 @@ export default function Home() {
           >
             註冊
           </a>
+          {/* Google 登录按钮 */}
+          <button
+            onClick={handleGoogleSignIn}
+            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center bg-white text-black gap-2 hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] text-sm sm:text-base h-12 px-5 sm:px-12 w-full sm:w-auto mt-4"
+          >
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQpJ20a1arvwqPXEyHoGer8g2sNveUrFKB_Rg&s" alt="Google Logo" className="w-5 h-5" />
+            使用 Google 登录
+          </button>
         </div>
       </main>
       <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
