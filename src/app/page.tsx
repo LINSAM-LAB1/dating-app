@@ -3,7 +3,8 @@
 
 import { useRouter } from "next/navigation";
 import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
-import { auth } from "./firebase";
+import { auth, db} from "./firebase";
+import { doc, setDoc } from "firebase/firestore"
 
 export default function Home() {
   const router = useRouter();
@@ -13,6 +14,11 @@ export default function Home() {
     try {
       const result = await signInWithPopup(auth, provider);
       const user = result.user; // result 是登录成功后的结果，其中 user 属性包含了用户信息
+      await setDoc(doc(db, "users", user.uid), {
+        name: user.displayName,
+        email: user.email,
+        photo: user.photoURL,
+      });
       // 登录成功后跳转到 dashboard
       router.push("/dashboard");
     } catch (error) {
