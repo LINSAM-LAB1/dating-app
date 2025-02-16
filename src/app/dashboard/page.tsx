@@ -251,7 +251,7 @@ export default function Dashboard() {
             ) : profiles.length > 0 ? (
               <div className="mt-4 flex flex-col items-center">
                 <h2 className="text-xl text-gray-700">{profiles[currentIndex].name}, {profiles[currentIndex].age} 岁</h2>
-                <Image src={profiles[currentIndex].photo} alt={profiles[currentIndex].name} className="w-32 h-32 rounded-full mt-2" width={128}/> 
+                <img src={profiles[currentIndex].photo} alt={profiles[currentIndex].name} className="w-32 h-32 rounded-full mt-2" />
                 <div className="flex mt-4">
                   <button onClick={handleLike} className="px-4 py-2 bg-green-500 text-white rounded-full mr-2 hover:bg-green-400 transition">
                     喜欢
