@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "MeetEase｜輕鬆邂逅",
-  description: "「還在煩惱如何找到理想對象？MeetEase｜輕鬆邂逅交友透過獨家『三觀問卷』、『智能配對』、『實體見面』，智能推薦最合拍的靈魂伴侶。不只線上聊天，還能安排真實見面，讓交友更高效、更有品質。立即加入，開始你的愛情旅程！",
+  title: "FindUCore｜尋找核心價值觀",
+  description: "「還在煩惱如何找到理想對象？FindUCore｜尋找核心價值觀透過獨家『三觀問卷』、『智能配對』、『實體見面』，智能推薦幫你找到價值觀相似的人。不只線上聊天，還能安排真實見面，讓交友更高效、更有品質。立即加入，開始你的愛情旅程！",
 };
 
 export default function RootLayout({
