@@ -6,7 +6,6 @@ import { doc, getDoc, updateDoc, setDoc, collection, getDocs, query, where } fro
 import { db } from "../firebase";
 import { useRouter } from "next/navigation"; 
 
-
 interface Profile {
   name: string;
   age: number;
@@ -81,28 +80,28 @@ export default function Dashboard() {
   }, [auth]);
 
   const checkViewedCount = async (userId: string) => {
-    const userDocRef = doc(db, "users", userId);
-    const docSnap = await getDoc(userDocRef);
-
+    const userDocRef = doc(db, "users", userId); // 获取当前用户文档的引用
+    const docSnap = await getDoc(userDocRef); // 获取文档内容
+    console.log(userId);
+    const today = new Date().toISOString().split("T")[0]; // 获取今天的日期
+  
     if (docSnap.exists()) {
       const data = docSnap.data();
-      const today = new Date().toISOString().split("T")[0];
-
+  
+      // 如果今天已经有记录了推荐次数，则直接更新视图
       if (data.lastRecommendDate === today) {
-        setViewedToday(data.recommendCount || 0);
+        setViewedToday(data.recommendCount || 0); // 显示当前推荐次数
       } else {
+        // 如果今天没有记录，更新文档，重置推荐次数
         await updateDoc(userDocRef, {
-          lastRecommendDate: today,
-          recommendCount: 0,
+          lastRecommendDate: today, // 更新今天的日期
+          recommendCount: 0, // 重置推荐次数为 0
         });
-        setViewedToday(0);
+        setViewedToday(0); // 更新本地状态
       }
     } else {
-      await setDoc(userDocRef, {
-        lastRecommendDate: new Date().toISOString().split("T")[0],
-        recommendCount: 0,
-      });
-      setViewedToday(0);
+      // 如果找不到文档，这里其实不应该发生，既然文档是注册时创建的
+      console.log("User document not found!"); // 可以加入日志查看问题
     }
   };
 
@@ -214,7 +213,7 @@ export default function Dashboard() {
 
   return (
     <div className="flex h-screen">
-      {/* 左側列表區域 */}
+      {/* 左侧列表区域 */}
       <div className={`transition-all duration-300 bg-gray-800 text-white ${sidebarOpen ? "w-64" : "w-20"} p-4 flex flex-col justify-between`}>
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -223,7 +222,7 @@ export default function Dashboard() {
           {sidebarOpen ? "收起" : "展开"}
         </button>
         
-        {/* 顯示配對成功的用戶區域 */}
+        {/* 显示配对成功的用户区域 */}
         {sidebarOpen && matchedUsers.length > 0 && (
           <div className="flex flex-col items-start mt-4 overflow-y-auto max-h-64">
             {matchedUsers.map((matchedUser) => (
@@ -240,7 +239,7 @@ export default function Dashboard() {
         )}
       </div>
 
-      {/* 主要內容區域 */}
+      {/* 主要内容区域 */}
       <div className="flex-1 flex flex-col items-center justify-center p-4">
         {user ? (
           <>
@@ -262,7 +261,7 @@ export default function Dashboard() {
                 <p className="mt-2 text-gray-600">今天剩余推荐次数: {3 - viewedToday}</p>
               </div>
             ) : (
-              <p className="mt-4 text-gray-600">没有更多用户推荐了。</p>
+              <p className="mt-4 text-gray-600">加载中...</p>
             )}
             <button onClick={handleSignOut} className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-400 transition">
               退出登录
