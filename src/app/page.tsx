@@ -1,6 +1,6 @@
 "use client"; // 标记此文件为客户端组件
 
-import { useEffect } from "react";
+
 import { useRouter } from "next/navigation";
 import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { auth } from "./firebase";
@@ -12,6 +12,7 @@ export default function Home() {
     const provider = new GoogleAuthProvider();
     try {
       const result = await signInWithPopup(auth, provider);
+      const user = result.user; // result 是登录成功后的结果，其中 user 属性包含了用户信息
       // 登录成功后跳转到 dashboard
       router.push("/dashboard");
     } catch (error) {
