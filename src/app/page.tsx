@@ -8,7 +8,7 @@ import { doc, setDoc } from "firebase/firestore"
 
 export default function Home() {
   const router = useRouter();
-
+  const provider = new GoogleAuthProvider();
   const handleGoogleSignIn = async () => {
     const provider = new GoogleAuthProvider();
     try {
