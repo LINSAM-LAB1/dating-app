@@ -5,6 +5,8 @@ import { getAuth, signOut, onAuthStateChanged, User } from "firebase/auth";
 import { doc, getDoc, updateDoc, setDoc, collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "../firebase";
 import { useRouter } from "next/navigation"; 
+import Image from "next/image";
+
 
 interface Profile {
   name: string;
@@ -41,7 +43,7 @@ export default function Dashboard() {
         const userSnapshot = await getDocs(userQuery);
         const matchedSnapshot = await getDocs(matchedQuery);
 
-        let matchedUsersList: Profile[] = [];
+        const matchedUsersList: Profile[] = [];
 
         // 合并两个查询的结果
         userSnapshot.docs.forEach((doc) => {
@@ -249,7 +251,7 @@ export default function Dashboard() {
             ) : profiles.length > 0 ? (
               <div className="mt-4 flex flex-col items-center">
                 <h2 className="text-xl text-gray-700">{profiles[currentIndex].name}, {profiles[currentIndex].age} 岁</h2>
-                <img src={profiles[currentIndex].photo} alt={profiles[currentIndex].name} className="w-32 h-32 rounded-full mt-2" />
+                <Image src={profiles[currentIndex].photo} alt={profiles[currentIndex].name} className="w-32 h-32 rounded-full mt-2" width={128}/> 
                 <div className="flex mt-4">
                   <button onClick={handleLike} className="px-4 py-2 bg-green-500 text-white rounded-full mr-2 hover:bg-green-400 transition">
                     喜欢
