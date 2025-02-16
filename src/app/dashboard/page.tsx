@@ -24,7 +24,7 @@ export default function Dashboard() {
   const auth = getAuth();
   const router = useRouter(); // 用来跳转到聊天页面
   const [settingsOpen, setSettingsOpen] = useState(false); // 用于管理齿轮菜单的状态
-  const menuRef = useRef(null); // 用于检测点击空白区域
+
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
