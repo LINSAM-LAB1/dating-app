@@ -4,8 +4,7 @@ import { useState, useEffect } from "react";
 import { getAuth, signOut, onAuthStateChanged, User } from "firebase/auth";
 import { doc, getDoc, updateDoc, setDoc, collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "../firebase";
-import { useRouter } from "next/navigation"; // 用來進行頁面跳轉
-
+import { useRouter } from "next/navigation"; 
 
 interface Profile {
   name: string;
@@ -19,16 +18,36 @@ export default function Dashboard() {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [viewedToday, setViewedToday] = useState<number>(0);
-  const [matchedUser, setMatchedUser] = useState<Profile | null>(null); // 新增配對用戶狀態
+  const [matchedUser, setMatchedUser] = useState<Profile | null>(null); // 配对用户
+  const [sidebarOpen, setSidebarOpen] = useState(true); // 控制左侧列表显示
   const auth = getAuth();
-  const router = useRouter(); // 用來跳轉到聊天頁面
+  const router = useRouter(); // 用来跳转到聊天页面
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
-        await checkViewedCount(currentUser.uid); // 读取 Firestore 的推荐次数
+        await checkViewedCount(currentUser.uid);
         await loadProfiles(currentUser);
+
+        // 查询 matches 集合，检查是否有配对记录
+        const matchesRef = collection(db, "matches");
+        const matchQuery = query(
+          matchesRef, 
+          where("userId", "==", currentUser.email)
+        );
+        const matchSnapshot = await getDocs(matchQuery);
+
+        if (!matchSnapshot.empty) {
+          const matchedDoc = matchSnapshot.docs[0].data(); // 获取第一个配对记录
+          const matchedUserProfile: Profile = {
+            name: matchedDoc.matchedUserId, // 假设 matchedUserId 是配对用户的 email
+            age: 0, // 可以根据需要加载更多资料
+            email: matchedDoc.matchedUserId,
+            photo: "" // 可以根据需要加载更多资料
+          };
+          setMatchedUser(matchedUserProfile); // 设置配对用户
+        }
       } else {
         setUser(null);
         setProfiles([]);
@@ -65,11 +84,11 @@ export default function Dashboard() {
   };
 
   const updateViewedCount = async () => {
-    if (!user) return;
-    
+    if (!user) return; // 确保 user 不为 null
+
     const newCount = viewedToday + 1;
     const userDocRef = doc(db, "users", user.uid);
-    
+
     await updateDoc(userDocRef, { recommendCount: newCount });
     setViewedToday(newCount);
   };
@@ -114,25 +133,39 @@ export default function Dashboard() {
     console.log(`喜欢: ${likedUser.name}`);
 
     try {
-      const likeRef = doc(db, "likes", `${user.uid}_${likedUser.email}`);
+      // 在 "likes" 集合中记录喜欢
+      const likeRef = doc(db, "likes", `${user.email}_${likedUser.email}`);
       await setDoc(likeRef, {
-        userId: user.uid,
+        userId: user.email,
         likedUserId: likedUser.email,
         timestamp: new Date().toISOString()
       });
 
+      // 检查是否反向喜欢
       const reverseLikeQuery = query(
         collection(db, "likes"),
-        where("likedUserId", "==", likedUser.email),
-        where("userId", "==", user.uid)
-      );
+        where("likedUserId", "==", user.email),
+        where("userId", "==", likedUser.email),
+      ); 
       const reverseLikeSnapshot = await getDocs(reverseLikeQuery);
 
       if (!reverseLikeSnapshot.empty) {
         alert("配对成功！");
-        setMatchedUser(likedUser); // 设置配对成功的用户
+        setMatchedUser(likedUser); // 配对成功
+
+        // 在 "matches" 集合中记录配对信息
+        const matchRef = doc(db, "matches", `${user.email}_${likedUser.email}`);
+        await setDoc(matchRef, {
+          userId: user.email,
+          matchedUserId: likedUser.email,
+          matchDate: new Date().toISOString(),
+          status: "matched",
+          chatStarted: false // 初始状态为未开始聊天
+        });
+
       } else {
         console.log("反向喜欢记录不存在，等待对方喜欢！");
+        alert("等待对方喜欢中！");
       }
 
       handleNextProfile();
@@ -157,44 +190,63 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen">
-      {user ? (
-        <>
-          <h1 className="text-2xl font-bold">欢迎, {user.email}！</h1>
-          {viewedToday >= 3 ? (
-            <p className="text-red-500 mt-4">今天的推荐用完了，请明天再来！</p>
-          ) : profiles.length > 0 ? (
-            <div className="mt-4 flex flex-col items-center">
-              <h2 className="text-xl">{profiles[currentIndex].name}, {profiles[currentIndex].age} 岁</h2>
-              <img src={profiles[currentIndex].photo} alt={profiles[currentIndex].name} className="w-32 h-32 rounded-full mt-2" width={500} height={300} />
-              <div className="flex mt-4">
-                <button onClick={handleLike} className="px-4 py-2 bg-green-500 text-white rounded mr-2">喜欢</button>
-                <button onClick={handleDislike} className="px-4 py-2 bg-red-500 text-white rounded">不喜欢</button>
-              </div>
-              <p className="mt-2">今天剩余推荐次数: {3 - viewedToday}</p>
-            </div>
-          ) : (
-            <p>加载推荐用户中...</p>
-          )}
-          <button onClick={handleSignOut} className="mt-4 px-4 py-2 bg-gray-500 text-white rounded">
-            退出
-          </button>
-
-          {/* 如果配对成功，则显示聊天链接 */}
-          {matchedUser && (
-            <div className="mt-4">
-              <p>你和 {matchedUser.name} 配对成功！</p>
+    <div className="flex h-screen">
+      {/* 左側列表區域 */}
+      <div className={`transition-all duration-300 bg-gray-800 text-white ${sidebarOpen ? "w-64" : "w-20"} p-4 flex flex-col justify-between`}>
+        <button
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          className="p-4 text-xl w-full text-center bg-gray-700 hover:bg-gray-600 rounded"
+        >
+          {sidebarOpen ? "收起" : "展开"}
+        </button>
+        
+        {/* 顯示配對成功的用戶區域 */}
+        {sidebarOpen && matchedUser && (
+          <div className="flex flex-col items-start mt-4 overflow-y-auto max-h-64">
+            <div className="flex flex-col items-center p-2 bg-gray-700 rounded-lg w-full">
+              <p className="text-white text-sm">你和 {matchedUser.name} 配对成功！</p>
               <button
-                onClick={() => router.push(`/chat?userId=${user.email}&matchedUserId=${matchedUser.email}`)}
-                className="px-4 py-2 bg-blue-500 text-white rounded">
+                onClick={() => router.push(`/chat?userId=${user?.email}&matchedUserId=${matchedUser.email}`)}
+                className="mt-2 px-4 py-2 bg-blue-500 text-white rounded text-xs">
                 去聊天
               </button>
             </div>
-          )}
-        </>
-      ) : (
-        <p>请先登录</p>
-      )}
+          </div>
+        )}
+      </div>
+
+      {/* 主要內容區域 */}
+      <div className="flex-1 flex flex-col items-center justify-center p-4">
+        {user ? (
+          <>
+            <h1 className="text-2xl font-bold text-gray-800">欢迎, {user.email}！</h1>
+            {viewedToday >= 3 ? (
+              <p className="text-red-500 mt-4">今天的推荐用完了，请明天再来！</p>
+            ) : profiles.length > 0 ? (
+              <div className="mt-4 flex flex-col items-center">
+                <h2 className="text-xl text-gray-700">{profiles[currentIndex].name}, {profiles[currentIndex].age} 岁</h2>
+                <img src={profiles[currentIndex].photo} alt={profiles[currentIndex].name} className="w-32 h-32 rounded-full mt-2" />
+                <div className="flex mt-4">
+                  <button onClick={handleLike} className="px-4 py-2 bg-green-500 text-white rounded-full mr-2 hover:bg-green-400 transition">
+                    喜欢
+                  </button>
+                  <button onClick={handleDislike} className="px-4 py-2 bg-red-500 text-white rounded-full hover:bg-red-400 transition">
+                    不喜欢
+                  </button>
+                </div>
+                <p className="mt-2 text-gray-600">今天剩余推荐次数: {3 - viewedToday}</p>
+              </div>
+            ) : (
+              <p className="text-gray-500">加载推荐用户中...</p>
+            )}
+            <button onClick={handleSignOut} className="mt-4 px-4 py-2 bg-gray-500 text-white rounded-full">
+              退出
+            </button>
+          </>
+        ) : (
+          <p>请先登录</p>
+        )}
+      </div>
     </div>
   );
 }
