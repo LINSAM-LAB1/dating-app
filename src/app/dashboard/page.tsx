@@ -1,7 +1,7 @@
 "use client";
 
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { getAuth, signOut, onAuthStateChanged, User } from "firebase/auth";
 import { doc, getDoc, updateDoc, setDoc, collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "../firebase";
@@ -24,7 +24,7 @@ export default function Dashboard() {
   const auth = getAuth();
   const router = useRouter(); // 用来跳转到聊天页面
   const [settingsOpen, setSettingsOpen] = useState(false); // 用于管理齿轮菜单的状态
-
+ 
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
