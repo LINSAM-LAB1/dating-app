@@ -34,32 +34,33 @@ export default function Home() {
     // 檢查是否來自 Line WebView
     if (userAgent.includes("Line")) {
       const url = window.location.href;
-      
-      // Android 設備，強制打開 Chrome
+  
+      // 如果是 Android 設備，強制用 Chrome 開啟
       if (/android/i.test(userAgent)) {
         window.location.href = `googlechrome://${url.replace(/^https?:\/\//, "")}`;
-        
-        // 5 秒後檢查是否仍然停留在 Line WebView 中，如果是，轉到 Chrome
+  
+        // 如果 5 秒後還是停留在 Line WebView 中，強制跳轉到 Google Play 商店安裝 Chrome
         setTimeout(() => {
           if (window.location.href === url) {
             window.location.href = `https://play.google.com/store/apps/details?id=com.android.chrome`;
           }
-        }, 5000); // 設定延遲時間，檢查是否成功跳轉
+        }, 5000); // 5 秒延遲檢查
       }
   
-      // iOS 設備，強制打開 Safari
+      // 如果是 iOS 設備，強制用 Safari 開啟
       else if (/iPad|iPhone|iPod/.test(userAgent) && !(window as any).MSStream) {
         window.location.href = `safari://${url}`;
-        
-        // 5 秒後檢查是否仍然停留在 Line WebView 中，如果是，轉到 App Store 下載 Safari
+  
+        // 如果 5 秒後還是停留在 Line WebView 中，強制跳轉到 App Store 安裝 Safari
         setTimeout(() => {
           if (window.location.href === url) {
             window.location.href = `https://apps.apple.com/us/app/safari/id404273502`;
           }
-        }, 5000);
+        }, 5000); // 5 秒延遲檢查
       }
     }
   }, []);
+  
   
 
   return (
