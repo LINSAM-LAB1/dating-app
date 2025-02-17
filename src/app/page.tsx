@@ -1,26 +1,28 @@
 "use client"; // 标记此文件为客户端组件
 
 import { useRouter } from "next/navigation";
-import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
-import { auth, db } from "./firebase";
-import { doc, setDoc } from "firebase/firestore";
-import { useEffect } from "react";
+import { signInWithPopup, GoogleAuthProvider, UserCredential } from "firebase/auth";
+import { auth, db} from "./firebase";
+import { doc, setDoc } from "firebase/firestore"
 
 export default function Home() {
   const router = useRouter();
-  const provider = new GoogleAuthProvider();
-  
-  // Google 登入處理函數
+
+  // handleGoogleSignIn 函数处理 Google 登录
   const handleGoogleSignIn = async () => {
     const provider = new GoogleAuthProvider();
     try {
-      const result = await signInWithPopup(auth, provider);
+      // 登录结果是 UserCredential 类型
+      const result: UserCredential = await signInWithPopup(auth, provider);
       const user = result.user; // result 是登录成功后的结果，其中 user 属性包含了用户信息
+
+      // 将用户信息保存到 Firebase 数据库
       await setDoc(doc(db, "users", user.uid), {
         name: user.displayName,
         email: user.email,
         photo: user.photoURL,
       });
+
       // 登录成功后跳转到 dashboard
       router.push("/dashboard");
     } catch (error) {
@@ -28,26 +30,6 @@ export default function Home() {
       alert("Google 登录失败");
     }
   };
-
-  // 檢查是否在 Line WebView 中並自動跳轉
-  useEffect(() => {
-    const userAgent = navigator.userAgent || navigator.vendor;
-
-    // 檢測是否為 Line 內建瀏覽器
-    if (userAgent.includes("Line")) {
-      const url = window.location.href;
-
-      // 如果是 Android，就用 Chrome 打開
-      if (/android/i.test(userAgent)) {
-        window.location.href = `googlechrome://${url.replace(/^https?:\/\//, "")}`;
-      }
-      
-      // 如果是 iOS，就用 Safari 打開
-      else if (/iPad|iPhone|iPod/.test(userAgent) && !(window as any).MSStream) {
-        window.location.href = `safari://${url}`;
-      }
-    }
-  }, []);
 
   return (
     <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
