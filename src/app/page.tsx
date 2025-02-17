@@ -1,50 +1,31 @@
 "use client"; // 标记此文件为客户端组件
 
+
 import { useRouter } from "next/navigation";
-import { signInWithRedirect, GoogleAuthProvider, getRedirectResult } from "firebase/auth";
+import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { auth, db} from "./firebase";
 import { doc, setDoc } from "firebase/firestore"
-import { useEffect } from "react";
+
 export default function Home() {
   const router = useRouter();
-
-  // Google 登入處理函數
-const handleGoogleSignIn = async () => {
   const provider = new GoogleAuthProvider();
-  try {
-    // 使用 redirect 方式進行登入
-    await signInWithRedirect(auth, provider);
-  } catch (error) {
-    console.error("Google 登录失败：", error);
-    alert("Google 登录失败");
-  }
-};
-
-// 在用戶返回後獲取登入結果
-const handleRedirectResult = async () => {
-  try {
-    const result = await getRedirectResult(auth);
-    if (result) {
-      const user = result.user; // 登入成功後的結果，其中 user 屬性包含了用戶信息
-      // 將用戶資料保存到 Firestore
+  const handleGoogleSignIn = async () => {
+    const provider = new GoogleAuthProvider();
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user; // result 是登录成功后的结果，其中 user 属性包含了用户信息
       await setDoc(doc(db, "users", user.uid), {
         name: user.displayName,
         email: user.email,
         photo: user.photoURL,
       });
-      // 登入成功後跳轉到 dashboard
+      // 登录成功后跳转到 dashboard
       router.push("/dashboard");
+    } catch (error) {
+      console.error("Google 登录失败：", error);
+      alert("Google 登录失败");
     }
-  } catch (error) {
-    console.error("Google 登录失败：", error);
-    alert("Google 登录失败");
-  }
-};
-
-// 在頁面加載時調用 handleRedirectResult 以處理重定向後的結果
-useEffect(() => {
-  handleRedirectResult();
-}, []);
+  };
 
   return (
     <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
