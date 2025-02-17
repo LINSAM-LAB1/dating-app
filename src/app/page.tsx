@@ -30,19 +30,21 @@ export default function Home() {
   // 檢查是否在 Line WebView 中並自動跳轉
   useEffect(() => {
     const userAgent = navigator.userAgent || navigator.vendor;
-
-    // 檢測是否為 Line 內建瀏覽器
+    
     if (userAgent.includes("Line")) {
       const url = window.location.href;
-
-      // 如果是 Android，就用 Chrome 打開
+      
       if (/android/i.test(userAgent)) {
+        // 在 Android 使用 Chrome 打開
         window.location.href = `googlechrome://${url.replace(/^https?:\/\//, "")}`;
       }
-      
-      // 如果是 iOS，就用 Safari 打開
       else if (/iPad|iPhone|iPod/.test(userAgent) && !(window as any).MSStream) {
+        // 在 iOS 使用 Safari 打開
         window.location.href = `safari://${url}`;
+      }
+      else {
+        // 將其轉向一個具有良好支持的瀏覽器
+        window.location.href = url;
       }
     }
   }, []);
