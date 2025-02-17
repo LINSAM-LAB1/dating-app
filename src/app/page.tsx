@@ -27,25 +27,30 @@ export default function Home() {
     }
   };
 
-  // 檢查是否在 Line WebView 中並自動跳轉
   useEffect(() => {
     const userAgent = navigator.userAgent || navigator.vendor;
   
-    // 檢查是否在 Line 內建瀏覽器
     if (userAgent.includes("Line")) {
       const url = window.location.href;
+      let delayTime = 1000; // 设置延迟时间为 1 秒
   
-      // 建立一個隱形的 <a> 標籤來觸發重定向
-      const anchor = document.createElement('a');
-      anchor.href = url;
-      anchor.target = '_blank';  // 開啟新窗口
-      document.body.appendChild(anchor);
-      anchor.click();  // 觸發點擊事件，跳轉到外部瀏覽器
-      document.body.removeChild(anchor);  // 清理 DOM
+      // 如果是 Android，就用 Chrome 打开
+      if (/android/i.test(userAgent)) {
+        window.location.href = `googlechrome://${url.replace(/^https?:\/\//, "")}`;
+      }
+      // 如果是 iOS，就用 Safari 打开
+      else if (/iPad|iPhone|iPod/.test(userAgent) && !(window as any).MSStream) {
+        window.location.href = `safari://${url}`;
+      }
+  
+      // 添加延时确保页面跳转后再继续其他操作
+      setTimeout(() => {
+        // 后续操作，例如重定向到其他页面
+        window.location.href = "https://yourwebsite.com"; // 替换为你需要跳转的页面
+      }, delayTime);
     }
   }, []);
   
-
   return (
     <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
       <main className="flex flex-col gap-8 row-start-2 items-center sm:items-center">
