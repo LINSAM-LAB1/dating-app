@@ -30,24 +30,37 @@ export default function Home() {
   // 檢查是否在 Line WebView 中並自動跳轉
   useEffect(() => {
     const userAgent = navigator.userAgent || navigator.vendor;
-    
+  
+    // 檢查是否來自 Line WebView
     if (userAgent.includes("Line")) {
       const url = window.location.href;
       
+      // Android 設備，強制打開 Chrome
       if (/android/i.test(userAgent)) {
-        // 在 Android 使用 Chrome 打開
         window.location.href = `googlechrome://${url.replace(/^https?:\/\//, "")}`;
+        
+        // 5 秒後檢查是否仍然停留在 Line WebView 中，如果是，轉到 Chrome
+        setTimeout(() => {
+          if (window.location.href === url) {
+            window.location.href = `https://play.google.com/store/apps/details?id=com.android.chrome`;
+          }
+        }, 5000); // 設定延遲時間，檢查是否成功跳轉
       }
+  
+      // iOS 設備，強制打開 Safari
       else if (/iPad|iPhone|iPod/.test(userAgent) && !(window as any).MSStream) {
-        // 在 iOS 使用 Safari 打開
         window.location.href = `safari://${url}`;
-      }
-      else {
-        // 將其轉向一個具有良好支持的瀏覽器
-        window.location.href = url;
+        
+        // 5 秒後檢查是否仍然停留在 Line WebView 中，如果是，轉到 App Store 下載 Safari
+        setTimeout(() => {
+          if (window.location.href === url) {
+            window.location.href = `https://apps.apple.com/us/app/safari/id404273502`;
+          }
+        }, 5000);
       }
     }
   }, []);
+  
 
   return (
     <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
