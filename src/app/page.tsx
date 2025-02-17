@@ -1,7 +1,7 @@
 "use client"; // 标记此文件为客户端组件
 
 import { useRouter } from "next/navigation";
-import { signInWithPopup, GoogleAuthProvider, UserCredential } from "firebase/auth";
+import { signInWithRedirect, GoogleAuthProvider, getRedirectResult } from "firebase/auth";
 import { auth, db} from "./firebase";
 import { doc, setDoc } from "firebase/firestore"
 import { useEffect } from "react";
@@ -9,48 +9,43 @@ export default function Home() {
   const router = useRouter();
 
   // Google 登入處理函數
-  const handleGoogleSignIn = async () => {
-    const provider = new GoogleAuthProvider();
-    try {
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user; // result 是登录成功后的结果，其中 user 属性包含了用户信息
+const handleGoogleSignIn = async () => {
+  const provider = new GoogleAuthProvider();
+  try {
+    // 使用 redirect 方式進行登入
+    await signInWithRedirect(auth, provider);
+  } catch (error) {
+    console.error("Google 登录失败：", error);
+    alert("Google 登录失败");
+  }
+};
+
+// 在用戶返回後獲取登入結果
+const handleRedirectResult = async () => {
+  try {
+    const result = await getRedirectResult(auth);
+    if (result) {
+      const user = result.user; // 登入成功後的結果，其中 user 屬性包含了用戶信息
+      // 將用戶資料保存到 Firestore
       await setDoc(doc(db, "users", user.uid), {
         name: user.displayName,
         email: user.email,
         photo: user.photoURL,
       });
-      // 登录成功后跳转到 dashboard
+      // 登入成功後跳轉到 dashboard
       router.push("/dashboard");
-    } catch (error) {
-      console.error("Google 登录失败：", error);
-      alert("Google 登录失败");
     }
-  };
+  } catch (error) {
+    console.error("Google 登录失败：", error);
+    alert("Google 登录失败");
+  }
+};
 
-  useEffect(() => {
-    const userAgent = navigator.userAgent || navigator.vendor;
-  
-    if (userAgent.includes("Line")) {
-      const url = window.location.href;
-      let delayTime = 1000; // 设置延迟时间为 1 秒
-  
-      // 如果是 Android，就用 Chrome 打开
-      if (/android/i.test(userAgent)) {
-        window.location.href = `googlechrome://${url.replace(/^https?:\/\//, "")}`;
-      }
-      // 如果是 iOS，就用 Safari 打开
-      else if (/iPad|iPhone|iPod/.test(userAgent) && !(window as any).MSStream) {
-        window.location.href = `safari://${url}`;
-      }
-  
-      // 添加延时确保页面跳转后再继续其他操作
-      setTimeout(() => {
-        // 后续操作，例如重定向到其他页面
-        window.location.href = "https://yourwebsite.com"; // 替换为你需要跳转的页面
-      }, delayTime);
-    }
-  }, []);
-  
+// 在頁面加載時調用 handleRedirectResult 以處理重定向後的結果
+useEffect(() => {
+  handleRedirectResult();
+}, []);
+
   return (
     <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
       <main className="flex flex-col gap-8 row-start-2 items-center sm:items-center">
