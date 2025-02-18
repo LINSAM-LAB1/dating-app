@@ -1,26 +1,38 @@
 "use client"; // 标记此文件为客户端组件
 
-
 import { useRouter } from "next/navigation";
 import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
-import { auth, db} from "./firebase";
-import { doc, setDoc } from "firebase/firestore"
+import { auth, db } from "./firebase";
+import { doc, setDoc } from "firebase/firestore";
 
 export default function Home() {
   const router = useRouter();
   const provider = new GoogleAuthProvider();
+
   const handleGoogleSignIn = async () => {
-    const provider = new GoogleAuthProvider();
+    // 检测是否在 LINE WebView 中
+    const isLineWebView = /Line/i.test(navigator.userAgent);
+    const loginUrl = window.location.origin + "/login"; // 替换为你的 Google 登录页面 URL
+
+    if (isLineWebView) {
+      // 强制在默认浏览器中打开
+      window.location.href = `googlechrome://${loginUrl}`; // Android Chrome
+      setTimeout(() => {
+        window.location.href = loginUrl; // iOS Safari 或备用跳转
+      }, 500);
+      return;
+    }
+
+    // 在正常浏览器中执行 Google 登录
     try {
       const result = await signInWithPopup(auth, provider);
-      const user = result.user; // result 是登录成功后的结果，其中 user 属性包含了用户信息
+      const user = result.user; // 登录成功后的用户信息
       await setDoc(doc(db, "users", user.uid), {
         name: user.displayName,
         email: user.email,
         photo: user.photoURL,
       });
-      // 登录成功后跳转到 dashboard
-      router.push("/dashboard");
+      router.push("/dashboard"); // 登录成功后跳转
     } catch (error) {
       console.error("Google 登录失败：", error);
       alert("Google 登录失败");
@@ -30,7 +42,6 @@ export default function Home() {
   return (
     <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
       <main className="flex flex-col gap-8 row-start-2 items-center sm:items-center">
-        {/* 程式碼感的 FindUCore */}
         <h1 className="text-5xl sm:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#4f6d7a] via-[#2a3d51] to-[#6f9a8a]">
           <span className="font-mono">FindUCore｜遇見對的人</span>
         </h1>
@@ -42,13 +53,16 @@ export default function Home() {
             </code>
             .
           </li>
-          <li>點擊《註冊/登入》按鈕開始<code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
+          <li>
+            點擊《註冊/登入》按鈕開始
+            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
               免費
-            </code>尋找您的伴侶</li>
+            </code>
+            尋找您的伴侶
+          </li>
         </ol>
 
         <div className="flex gap-4 items-center flex-col sm:flex-col justify-center">
-          {/* 登录按钮 */}
           <a
             className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-12 px-5 sm:px-12 w-full sm:w-auto"
             href="/login"
@@ -57,7 +71,6 @@ export default function Home() {
           >
             登入
           </a>
-          {/* 注册按钮 */}
           <a
             className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-12 px-5 sm:px-12 w-full sm:w-auto"
             href="/signup"
@@ -71,7 +84,11 @@ export default function Home() {
             onClick={handleGoogleSignIn}
             className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center bg-white text-black gap-2 hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] text-sm sm:text-base h-12 px-5 sm:px-12 w-full sm:w-auto mt-4"
           >
-            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQpJ20a1arvwqPXEyHoGer8g2sNveUrFKB_Rg&s" alt="Google Logo" className="w-5 h-5" />
+            <img
+              src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQpJ20a1arvwqPXEyHoGer8g2sNveUrFKB_Rg&s"
+              alt="Google Logo"
+              className="w-5 h-5"
+            />
             登录
           </button>
         </div>
