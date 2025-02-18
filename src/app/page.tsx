@@ -5,34 +5,47 @@ import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { auth, db } from "./firebase";
 import { doc, setDoc } from "firebase/firestore";
 
+// 检测是否在 LINE 的 WebView 内
+const isLineWebView = () => {
+  const ua = navigator.userAgent.toLowerCase();
+  return ua.includes("line");
+};
+
+const openInExternalBrowser = (url: string) => {
+  const isIOSStandalone = (window.navigator as any).standalone;
+  if (isIOSStandalone) {
+    // iOS PWA 环境
+    window.location.href = url;
+  } else {
+    // 其他情况，尝试在默认浏览器中打开
+    window.open(url, '_blank');
+  }
+};
+
+// 用法：
+openInExternalBrowser('https://yourwebsite.com');
+
+
 export default function Home() {
   const router = useRouter();
   const provider = new GoogleAuthProvider();
 
   const handleGoogleSignIn = async () => {
-    // 检测是否在 LINE WebView 中
-    const isLineWebView = /Line/i.test(navigator.userAgent);
-    const loginUrl = window.location.origin + "/login"; // 替换为你的 Google 登录页面 URL
-
-    if (isLineWebView) {
-      // 强制在默认浏览器中打开
-      window.location.href = `googlechrome://${loginUrl}`; // Android Chrome
-      setTimeout(() => {
-        window.location.href = loginUrl; // iOS Safari 或备用跳转
-      }, 500);
+    if (isLineWebView()) {
+      alert("检测到您在 LINE 内打开，请在外部浏览器登录 Google。");
+      openInExternalBrowser(window.location.href);
       return;
     }
 
-    // 在正常浏览器中执行 Google 登录
     try {
       const result = await signInWithPopup(auth, provider);
-      const user = result.user; // 登录成功后的用户信息
+      const user = result.user;
       await setDoc(doc(db, "users", user.uid), {
         name: user.displayName,
         email: user.email,
         photo: user.photoURL,
       });
-      router.push("/dashboard"); // 登录成功后跳转
+      router.push("/dashboard");
     } catch (error) {
       console.error("Google 登录失败：", error);
       alert("Google 登录失败");
@@ -53,72 +66,19 @@ export default function Home() {
             </code>
             .
           </li>
-          <li>
-            點擊《註冊/登入》按鈕開始
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              免費
-            </code>
-            尋找您的伴侶
-          </li>
+          <li>點擊《註冊/登入》按鈕開始<code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold"> 免費 </code>尋找您的伴侶</li>
         </ol>
 
         <div className="flex gap-4 items-center flex-col sm:flex-col justify-center">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-12 px-5 sm:px-12 w-full sm:w-auto"
-            href="/login"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            登入
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-12 px-5 sm:px-12 w-full sm:w-auto"
-            href="/signup"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            註冊
-          </a>
-          {/* Google 登录按钮 */}
           <button
             onClick={handleGoogleSignIn}
             className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center bg-white text-black gap-2 hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] text-sm sm:text-base h-12 px-5 sm:px-12 w-full sm:w-auto mt-4"
           >
-            <img
-              src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQpJ20a1arvwqPXEyHoGer8g2sNveUrFKB_Rg&s"
-              alt="Google Logo"
-              className="w-5 h-5"
-            />
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQpJ20a1arvwqPXEyHoGer8g2sNveUrFKB_Rg&s" alt="Google Logo" className="w-5 h-5" />
             登录
           </button>
         </div>
       </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href=""
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          條款與隱私
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href=""
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          故事起源
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href=""
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          關於我們 →
-        </a>
-      </footer>
     </div>
   );
 }
