@@ -10,10 +10,11 @@ export default function Home() {
   const router = useRouter();
   const provider = new GoogleAuthProvider();
 
-  // 监听 Google 登录的回调
+  // 处理 Google 登录回调
   useEffect(() => {
-    getRedirectResult(auth)
-      .then(async (result) => {
+    const handleRedirectResult = async () => {
+      try {
+        const result = await getRedirectResult(auth);
         if (result) {
           const user = result.user;
           await setDoc(doc(db, "users", user.uid), {
@@ -21,15 +22,16 @@ export default function Home() {
             email: user.email,
             photo: user.photoURL,
           });
-          router.push("/dashboard");
+          router.push("/dashboard"); // 登录成功后跳转
         }
-      })
-      .catch((error) => {
-        console.error("Google 登录回调失败：", error);
-      });
+      } catch (error) {
+        console.error("Google 登录失败：", error);
+        alert("Google 登录失败");
+      }
+    };
+    handleRedirectResult();
   }, [router]);
 
-  // 触发 Google 登录
   const handleGoogleSignIn = async () => {
     try {
       await signInWithRedirect(auth, provider);
@@ -47,7 +49,7 @@ export default function Home() {
         </h1>
         <ol className="list-inside list-decimal text-sm text-center sm:text-center font-[family-name:var(--font-geist-mono)]">
           <li className="mb-2">
-            歡迎來到交友網站，FindUCore全名 Find you Core beliefs，讓你遇見對的價值觀
+            歡迎來到交友網站，FindUCore全名Find you Core beliefs，讓你遇見對的價值觀
             <code className="bg-black/[.05] dark:bg-white/[.05] px-1 py-0.5 rounded font-semibold">
               系統透過三觀問卷、智能匹配、實體見面，幫助您開啟旅程
             </code>
