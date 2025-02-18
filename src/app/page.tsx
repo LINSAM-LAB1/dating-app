@@ -1,6 +1,6 @@
-"use client"; // Next.js 客户端组件
+"use client"; // 标记此文件为客户端组件
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { signInWithRedirect, getRedirectResult, GoogleAuthProvider } from "firebase/auth";
 import { auth, db } from "./firebase";
@@ -9,15 +9,6 @@ import { doc, setDoc } from "firebase/firestore";
 export default function Home() {
   const router = useRouter();
   const provider = new GoogleAuthProvider();
-  const [isLineBrowser, setIsLineBrowser] = useState(false);
-
-  // 检测是否在 LINE 浏览器中
-  useEffect(() => {
-    const userAgent = navigator.userAgent || navigator.vendor;
-    if (/Line/i.test(userAgent)) {
-      setIsLineBrowser(true);
-    }
-  }, []);
 
   // 处理 Google 登录回调
   useEffect(() => {
@@ -43,20 +34,11 @@ export default function Home() {
 
   const handleGoogleSignIn = async () => {
     try {
-      await signInWithRedirect(auth, provider);
+      await signInWithRedirect(auth, provider); // 使用重定向方式
     } catch (error) {
       console.error("Google 登录失败：", error);
       alert("Google 登录失败");
     }
-  };
-
-  // 强制在外部浏览器打开页面
-  const openInExternalBrowser = () => {
-    const url = window.location.href;
-    window.location.href = `googlechrome://${url}`; // Android Chrome
-    setTimeout(() => {
-      window.location.href = `https://www.google.com/search?q=${encodeURIComponent(url)}`; // 兼容 Safari
-    }, 500);
   };
 
   return (
@@ -78,31 +60,31 @@ export default function Home() {
             </code>尋找您的伴侶</li>
         </ol>
 
-        {/* 如果在 LINE 浏览器，显示提示 */}
-        {isLineBrowser ? (
-          <div className="flex flex-col items-center">
-            <p className="text-red-600 text-lg font-semibold">
-              你正在使用 LINE 内建浏览器，Google 登录可能无法使用
-            </p>
-            <button
-              onClick={openInExternalBrowser}
-              className="rounded-full bg-blue-600 text-white px-5 py-3 mt-4 text-lg font-bold"
-            >
-              在 Chrome/Safari 打开
-            </button>
-          </div>
-        ) : (
-          // Google 登录按钮
-          <div className="flex gap-4 items-center flex-col sm:flex-col justify-center">
-            <button
-              onClick={handleGoogleSignIn}
-              className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center bg-white text-black gap-2 hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] text-sm sm:text-base h-12 px-5 sm:px-12 w-full sm:w-auto mt-4"
-            >
-              <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQpJ20a1arvwqPXEyHoGer8g2sNveUrFKB_Rg&s" alt="Google Logo" className="w-5 h-5" />
-              使用 Google 登录
-            </button>
-          </div>
-        )}
+        <div className="flex gap-4 items-center flex-col sm:flex-col justify-center">
+          <a
+            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-12 px-5 sm:px-12 w-full sm:w-auto"
+            href="/login"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            登入
+          </a>
+          <a
+            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-12 px-5 sm:px-12 w-full sm:w-auto"
+            href="/signup"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            註冊
+          </a>
+          <button
+            onClick={handleGoogleSignIn}
+            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center bg-white text-black gap-2 hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] text-sm sm:text-base h-12 px-5 sm:px-12 w-full sm:w-auto mt-4"
+          >
+            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQpJ20a1arvwqPXEyHoGer8g2sNveUrFKB_Rg&s" alt="Google Logo" className="w-5 h-5" />
+            登录
+          </button>
+        </div>
       </main>
       <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
         <a
